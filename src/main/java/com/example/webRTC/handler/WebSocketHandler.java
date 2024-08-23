@@ -1,4 +1,4 @@
-package com.example.webRTC;
+package com.example.webRTC.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
