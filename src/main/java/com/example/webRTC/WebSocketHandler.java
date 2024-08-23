@@ -11,12 +11,13 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler { // WebSocket 메시지를 처리하는 핸들러 클래스 선언. TextWebSocketHandler를 상속받아 텍스트 메시지 처리 기능을 제공.
-
+                                                                      // WebSocketSession은 연결을 맺고 나서 유지되는 세션. 연결 끊기 전까지 전달 받은 정보를 사용할 수 있다.
+                                                                      // 유저 정보를 헤더에 담아서 맺었다면 이 정보를 계속 사용할 수 있는 것이다.
     private Map<String, WebSocketSession> sessions = new HashMap<>(); // 연결된 클라이언트들의 WebSocketSession을 저장하는 Map. 세션 ID를 키로 사용하여 각 클라이언트의 세션을 관리.
     private ObjectMapper objectMapper = new ObjectMapper(); // JSON 처리를 위한 Jackson 라이브러리의 ObjectMapper 객체 생성. 메시지를 JSON 형식으로 변환하거나, JSON 형식의 메시지를 Java 객체로 변환할 때 사용.
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception { // 클라이언트로부터 텍스트 메시지를 수신했을 때 호출되는 메서드.
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception { // 클라이언트로부터 텍스트 메시지를 수신했을 때 호출되는 메서드. 메시지를 다루는 메서드.
         Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class); // 수신한 메시지(payload)를 JSON에서 Java Map 객체로 변환.
         String type = (String) payload.get("type"); // 메시지 타입(type)을 추출. 예: "join_room", "offer", "answer", "ice".
         String roomName = (String) payload.get("roomName"); // 메시지에서 방 이름(roomName)을 추출.
@@ -26,9 +27,9 @@ public class WebSocketHandler extends TextWebSocketHandler { // WebSocket 메시
                 session.getAttributes().put("roomName", roomName); // 현재 세션에 방 이름을 저장.
                 sendMessageToRoom(roomName, new TextMessage("{\"type\":\"welcome\"}")); // 해당 방에 있는 모든 클라이언트에게 환영 메시지를 전송.
                 break;
-            case "offer": // WebRTC offer 메시지일 때.
-            case "answer": // WebRTC answer 메시지일 때.
-            case "ice": // WebRTC ICE 후보 메시지일 때.
+            case "offer": // WebRTC offer 메시지일 때. A 클라이언트가 B 클라이언트에게 자신의 미디어 스트림을 제공하겠다는 요청.
+            case "answer": // WebRTC answer 메시지일 때. B 클라이언트가 A 클라이언트의 offer에 대한 응답.
+            case "ice": // WebRTC ICE 후보 메시지일 때. 두 클라이언트가 서로 직접 연결될 수 있도록 네트워크 정보를 교환하는 데이터.
                 sendMessageToRoom(roomName, message); // 해당 방에 있는 모든 클라이언트에게 받은 메시지를 그대로 전송.
                 break;
         }
@@ -43,12 +44,12 @@ public class WebSocketHandler extends TextWebSocketHandler { // WebSocket 메시
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception { // 클라이언트와의 WebSocket 연결이 성공적으로 수립되었을 때 호출되는 메서드.
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception { // 클라이언트와의 WebSocket 연결이 성공적으로 수립되었을 때 호출되는 메서드. // 입장시 웰컴을 연결해도 돼
         sessions.put(session.getId(), session); // 새로운 세션을 sessions Map에 추가하여 관리.
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception { // 클라이언트와의 WebSocket 연결이 종료되었을 때 호출되는 메서드.
+    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception { // 클라이언트와의 WebSocket 연결이 종료되었을 때 호출되는 메서드.// 채팅에 참여중인 모든 유저에게 퇴장메시지 보내기로 사용해도 돼
         sessions.remove(session.getId()); // 종료된 세션을 sessions Map에서 제거.
     }
 }
