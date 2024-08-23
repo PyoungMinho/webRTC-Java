@@ -10,9 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class WebSocketHandler extends TextWebSocketHandler {
+public class WebSocketHandler extends TextWebSocketHandler { //핸들러 관련된 부분
 
-    private final UserRepository userRepository;
     private Map<String, WebSocketSession> sessions = new HashMap<>();
     private ObjectMapper objectMapper = new ObjectMapper();
 

@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @RequiredArgsConstructor
 public class WebConfig implements WebSocketConfigurer {
 
-    private final UserRepository userRepository;
+    private final UserRepository userRepository; // 오류 상관없음 ( Bm 플젝을 위한 추가)
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -20,6 +20,6 @@ public class WebConfig implements WebSocketConfigurer {
 
     @Bean
     public WebSocketHandler webSocketHandler() {
-        return new WebSocketHandler(userRepository);
+        return new WebSocketHandler(userRepository);  // 오류 상관없음 ( Bm 플젝을 위한 추가)
     }
 }
