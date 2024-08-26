@@ -17,6 +17,6 @@ public class WebRtcConfig implements WebSocketConfigurer {
 
     @Bean
     public org.springframework.web.socket.WebSocketHandler signalingSocketHandler() {
-        return new com.boundary.config.web.socket.WebSocketHandler();
+        return new com.example.webRTC.handler.WebSocketHandler();
     }
 }

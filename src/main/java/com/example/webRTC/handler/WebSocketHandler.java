@@ -2,15 +2,20 @@ package com.example.webRTC.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+@Slf4j
+@Component
 @RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -18,9 +23,58 @@ public class WebSocketHandler extends TextWebSocketHandler {
     // 세션 정보 저장  -> { 세션1 : 객체 , 세션2 : 객체 , ....}
     private final Map<String, WebSocketSession> sessions = new HashMap<>();
 
+    // 시그널링에 사용되는 메시지 타입 :
+    private static final String MSG_TYPE_OFFER = "offer";
+    private static final String MSG_TYPE_ANSWER = "answer";
+    private static final String MSG_TYPE_CANDIDATE = "candidate";
+
+    private static final String MSG_TYPE_JOIN = "join_room";
 
 
 
+
+    @Override // WebSocket 연결 시
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        log.info("New connection established : 세션 {} ", session );
+
+    }
+
+    // 양방향 통신
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+        String type = (String) payload.get("type");
+        String roomName = (String) payload.get("roomName");
+
+
+    }
+
+
+
+
+
+
+
+    // 소켓 연결 종료
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        log.info(">>> [ws] 클라이언트 접속 해제 : 세션 - {}, 상태 - {}", session, status);
+
+
+    }
+
+    // 소켓 통신 에러
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        log.info(">>> 에러 발생 : 소켓 통신 에러 {}", exception.getMessage());
+
+
+        String webSessionId = session.getId();
+
+        // 연결이 종료되면 sessions 와 userInfo 에서 해당 유저 삭제
+        sessions.get(webSessionId).close();
+        sessions.remove(webSessionId);
+    }
 
 
 //    @Override
