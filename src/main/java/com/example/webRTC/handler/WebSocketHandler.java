@@ -1,149 +1,77 @@
 package com.example.webRTC.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
+
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import org.json.JSONObject;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
-@Component
-@RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
-    private ObjectMapper objectMapper = new ObjectMapper();
 
-    // 세션 정보 저장  -> { 세션1 : 객체 , 세션2 : 객체 , ....}
-    private final Map<String, WebSocketSession> sessions = new HashMap<>();
+    // 방(roomName) 관리 - 방 이름을 키로, 세션 맵을 값으로 가지는 구조
+    private final Map<String, Map<String, WebSocketSession>> rooms = new ConcurrentHashMap<>();
 
-    // 시그널링에 사용되는 메시지 타입 :
-    private static final String MSG_TYPE_OFFER = "offer";
-    private static final String MSG_TYPE_ANSWER = "answer";
-    private static final String MSG_TYPE_CANDIDATE = "candidate";
-
-    private static final String MSG_TYPE_JOIN = "join_room";
-
-
-
-
-    @Override // WebSocket 연결 시
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("New connection established : 세션 {} ", session );
-
-    }
-
-    // 양방향 통신
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
-        String type = (String) payload.get("type");
-        String roomName = (String) payload.get("roomName");
+    public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        // JSON 메시지 파싱
+        String payload = message.getPayload();
+        JSONObject jsonMessage = new JSONObject(payload);
+        String type = jsonMessage.getString("type");
 
-
+        if ("join_room".equals(type)) {
+            String roomName = jsonMessage.getString("roomName");
+            joinRoom(session, roomName);
+        } else if ("offer".equals(type)) {
+            String roomName = jsonMessage.getString("roomName");
+            String offer = jsonMessage.getString("offer");
+            sendMessageToRoom(roomName, session, "offer", offer);
+        } else if ("answer".equals(type)) {
+            String roomName = jsonMessage.getString("roomName");
+            String answer = jsonMessage.getString("answer");
+            sendMessageToRoom(roomName, session, "answer", answer);
+        } else if ("ice".equals(type)) {
+            String roomName = jsonMessage.getString("roomName");
+            String candidate = jsonMessage.getString("candidate");
+            sendMessageToRoom(roomName, session, "ice", candidate);
+        }
     }
 
+    private void joinRoom(WebSocketSession session, String roomName) throws Exception {
+        rooms.computeIfAbsent(roomName, k -> new ConcurrentHashMap<>()).put(session.getId(), session);
+        JSONObject welcomeMessage = new JSONObject();
+        welcomeMessage.put("type", "welcome");
+        session.sendMessage(new TextMessage(welcomeMessage.toString()));
+    }
 
+    private void sendMessageToRoom(String roomName, WebSocketSession senderSession, String type, String data) throws Exception {
+        Map<String, WebSocketSession> clients = rooms.get(roomName);
+        if (clients != null) {
+            JSONObject message = new JSONObject();
+            message.put("type", type);
+            message.put(type, data);
 
+            for (WebSocketSession session : clients.values()) {
+                if (!session.equals(senderSession)) {
+                    session.sendMessage(new TextMessage(message.toString()));
+                }
+            }
+        }
+    }
 
-
-
-
-    // 소켓 연결 종료
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        log.info(">>> [ws] 클라이언트 접속 해제 : 세션 - {}, 상태 - {}", session, status);
-
-
+    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
+        // 연결이 닫히면 해당 세션을 제거
+        rooms.values().forEach(sessions -> sessions.remove(session.getId()));
     }
-
-    // 소켓 통신 에러
-    @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.info(">>> 에러 발생 : 소켓 통신 에러 {}", exception.getMessage());
-
-
-        String webSessionId = session.getId();
-
-        // 연결이 종료되면 sessions 와 userInfo 에서 해당 유저 삭제
-        sessions.get(webSessionId).close();
-        sessions.remove(webSessionId);
-    }
-
-
-//    @Override
-//    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-//        Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
-//        String type = (String) payload.get("type");
-//        String roomName = (String) payload.get("roomName");
-//
-//        switch (type) {
-//            case "join_room":
-//                handleJoinRoom(session,roomName);
-//                break;
-//            case "offer":
-//            case "answer": // WebRTC answer 메시지일 때. B 클라이언트가 A 클라이언트의 offer에 대한 응답.
-//            case "ice": // WebRTC ICE 후보 메시지일 때. 두 클라이언트가 서로 직접 연결될 수 있도록 네트워크 정보를 교환하는 데이터.
-//                sendMessageToRoom(roomName, message); // 해당 방에 있는 모든 클라이언트에게 받은 메시지를 그대로 전송.
-//                break;
-//        }
-//    }
-//
-//    private void handleJoinRoom(WebSocketSession session, String roomName) throws Exception {
-//        rooms.computeIfAbsent(roomName, k -> new HashSet<>()).add(session);
-//        session.getAttributes().put("roomName", roomName);
-//
-//        sendMessageToRoom(roomName, new TextMessage("{\"type\":\"welcome\"}"));
-//    }
-//    //
-////    private void sendMessageToRoom(String roomName, TextMessage message) throws Exception {
-////        Set<WebSocketSession> roomSessions = rooms.get(roomName);
-////        if (roomSessions != null) {
-////            for (WebSocketSession session : roomSessions) {
-////                session.sendMessage(message);
-////            }
-////        }
-////    }
-//    private void sendMessageToRoom(String roomName, TextMessage message) {
-//        Set<WebSocketSession> roomSessions = rooms.get(roomName);
-//        if (roomSessions != null) {
-//            for (WebSocketSession session : roomSessions) {
-//                synchronized (session) {
-//                    if (session.isOpen()) {
-//                        try {
-//                            session.sendMessage(message);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-//        // 연결된 세션에 대한 초기 작업은 handleTextMessage에서 처리됨
-//    }
-//
-//    @Override
-//    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
-//        String roomName = (String) session.getAttributes().get("roomName");
-//        if (roomName != null) {
-//            Set<WebSocketSession> roomSessions = rooms.get(roomName);
-//            if (roomSessions != null) {
-//                roomSessions.remove(session);
-//                if (roomSessions.isEmpty()) {
-//                    rooms.remove(roomName);
-//                }
-//            }
-//        }
-//    }
-
 }
+//rooms 맵: 각 방에 포함된 클라이언트 세션을 관리하기 위한 맵입니다. roomName을 키로, 그 방에 속한 WebSocketSession을 값으로 가집니다.
+//
+//handleTextMessage 메서드: 클라이언트로부터 메시지를 수신했을 때, JSON을 파싱하여 type 필드를 확인한 후, 각 메시지 타입에 맞는 작업을 수행합니다.
+//
+//joinRoom 메서드: 클라이언트가 특정 방에 참가할 때, 방에 세션을 추가하고 "welcome" 메시지를 해당 클라이언트에게 전송합니다.
+//
+//sendMessageToRoom 메서드: 특정 방에 있는 다른 클라이언트들에게 메시지를 전송합니다. offer, answer, ice 메시지를 처리하는 로직이 여기에서 처리됩니다.

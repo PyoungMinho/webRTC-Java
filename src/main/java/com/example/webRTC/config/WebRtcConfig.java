@@ -10,7 +10,7 @@ public class WebRtcConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(signalingSocketHandler(), "/signal")   // 연결될 Endpoint
+        registry.addHandler(signalingSocketHandler(), "/ws")   // 연결될 Endpoint
                 .setAllowedOriginPatterns("*");                            // CORS 설정
 
     }
