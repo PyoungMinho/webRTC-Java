@@ -45,6 +45,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             case "ice":
                 handleIceCandidate(session, jsonObject);
                 break;
+
             default:
                 System.out.println("알 수 없는 메시지 타입: " + type);
         }
