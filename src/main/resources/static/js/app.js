@@ -131,11 +131,7 @@ socket.onmessage = async (event) => {
                 console.log("Creating offer as a new user joined");
                 const offer = await myPeerConnection.createOffer();
                 await myPeerConnection.setLocalDescription(offer);
-                socket.send(JSON.stringify({
-                    type: "offer",
-                    data: offer,
-                    roomName
-                }));
+                socket.send(JSON.stringify({ type: "offer", data: offer, roomName}));
                 console.log("Sent offer:", offer);
             }
         }
