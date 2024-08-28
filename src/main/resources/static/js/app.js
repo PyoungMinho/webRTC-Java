@@ -38,7 +38,7 @@ async function getCameras() {
 async function getMedia(deviceId) {
     const initialConstrains = {
         audio: true,
-        video: { facingMode: "user" },
+        video: { facingMode: "user" }, // 셀프 카메라 설정
     };
     const cameraConstraints = {
         audio: true,
