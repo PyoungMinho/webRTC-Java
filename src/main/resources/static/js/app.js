@@ -1,5 +1,5 @@
 // WebSocket 연결 설정
-const socket = new WebSocket("ws://localhost:8080/ws");
+const socket = new WebSocket("ws://localhost:8080/ws"); // 외부에서 접속시 어떻게 할 것인가??
 
 const myFace = document.getElementById('myFace');
 const peerFace = document.getElementById('peerFace');
