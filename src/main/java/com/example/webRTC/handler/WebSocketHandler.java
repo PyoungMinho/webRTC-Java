@@ -32,7 +32,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         JSONObject jsonObject = new JSONObject(payload);
         String type = jsonObject.getString("type");
 
-        switch (type) {
+        switch (type) { // 타입으로 구분하여 알맞게 동작하도록 자바 코드로 signaling을 구현
             case "join_room":
                 handleJoinRoom(session, jsonObject);
                 break;

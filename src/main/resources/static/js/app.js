@@ -18,7 +18,7 @@ let myPeerConnection;
 
 async function getCameras() {
     try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
+        const devices = await navigator.mediaDevices.enumerateDevices(); // 사용(또는 접근)이 가능한 미디어 입력 장치나 출력장치들의 리스트
         const cameras = devices.filter(device => device.kind === "videoinput");
         const currentCamera = myStream.getVideoTracks()[0];
         cameras.forEach(camera => {
