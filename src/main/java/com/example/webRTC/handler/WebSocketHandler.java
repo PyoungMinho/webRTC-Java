@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.Map;
 
-public class WebSocketHandler extends TextWebSocketHandler {
+public class WebSocketHandler extends TextWebSocketHandler { // Java version signaling server
 
     // WebSocket 세션을 관리하는 Set (스레드 안전한 방식으로 관리)
     private final Set<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
