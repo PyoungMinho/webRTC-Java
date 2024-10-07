@@ -35,7 +35,7 @@ public class WebSocketHandler extends TextWebSocketHandler { // Java version sig
         switch (type) { // 타입으로 구분하여 알맞게 동작하도록 자바 코드로 signaling을 구현
             case "join_room":
                 handleJoinRoom(session, jsonObject);
-                break;
+                break; // break 없으면 끝까지 다 돌아버려
             case "offer":
                 handleOffer(session, jsonObject);
                 break;
