@@ -1,5 +1,6 @@
 package com.example.webRTC.config;
 
+import com.example.webRTC.handler.WebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -21,6 +22,6 @@ public class WebRtcConfig implements WebSocketConfigurer {
 
     @Bean
     public org.springframework.web.socket.WebSocketHandler signalingSocketHandler() {
-        return new com.example.webRTC.handler.WebSocketHandler();
+        return new WebSocketHandler();
     }
 }
