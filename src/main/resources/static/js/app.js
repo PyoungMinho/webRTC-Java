@@ -1,5 +1,6 @@
 // WebSocket 연결 설정
-const socket = new WebSocket("ws://localhost:8080/ws"); // 외부에서 접속시 어떻게 할 것인가?? front 협업 필요
+// WebSocket 연결 설정
+const socket = new WebSocket("ws://localhost:8081/ws");
 
 const myFace = document.getElementById('myFace');
 const peerFace = document.getElementById('peerFace');
@@ -195,7 +196,7 @@ function makeConnection() {
     myPeerConnection.addEventListener("icecandidate", handleIce);
     myPeerConnection.addEventListener("track", handleTrackEvent);
 
-    myStream.getTracks().forEach(track => myPeerConnection.addTrack(track, myStream));
+    myStream.getTracks().forEach(track => myPeerConnection.addTrack(track, myStream)); //.getTracks() https 통신
 }
 
 function handleTrackEvent(event) {
