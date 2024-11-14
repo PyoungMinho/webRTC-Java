@@ -1,5 +1,5 @@
 // WebSocket 연결 설정
-const socket = new WebSocket("ws://localhost:8080/ws"); // 외부에서 접속시 어떻게 할 것인가?? front 협업 필요
+const socket = new WebSocket("wss://9385-1-227-243-158.ngrok-free.appalhost:8080/ws");
 
 const myFace = document.getElementById('myFace');
 const peerFace = document.getElementById('peerFace');
