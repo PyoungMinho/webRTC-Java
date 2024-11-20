@@ -1,5 +1,5 @@
 // WebSocket 연결 설정
-const socket = new WebSocket("ws://localhost:8081/ws");
+const socket = new WebSocket("wss://9385-1-227-243-158.ngrok-free.appalhost:8080/ws");
 
 const myFace = document.getElementById('myFace');
 const peerFace = document.getElementById('peerFace');
