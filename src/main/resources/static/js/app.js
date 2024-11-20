@@ -1,5 +1,4 @@
 // WebSocket 연결 설정
-// WebSocket 연결 설정
 const socket = new WebSocket("ws://localhost:8081/ws");
 
 const myFace = document.getElementById('myFace');
